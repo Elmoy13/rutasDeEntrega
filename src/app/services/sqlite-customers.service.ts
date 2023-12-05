@@ -7,7 +7,7 @@ import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 })
 export class SqliteCustomersService {
 
-  private dbInstance: SQLiteObject;
+  private dbInstance: SQLiteObject | undefined;
   readonly db_name: string = "sistema_de_rutas.db";
   readonly db_table: string = "customers";
   CUSTOMERS: Array<any> = [];
@@ -16,140 +16,162 @@ export class SqliteCustomersService {
     private platform: Platform,
     private sqlite: SQLite
   ) {
-    this.databaseConn();
+    this.establishConnection();
   }
 
-  // Create SQLite database 
-  databaseConn() {
-    this.platform.ready().then(() => {
-      this.sqlite.create({
+  private async establishConnection(): Promise<void> {
+    if (!this.dbInstance) {
+      this.dbInstance = await this.sqlite.create({
         name: this.db_name,
         location: 'default'
-      }).then((sqLite: SQLiteObject) => {
-        this.dbInstance = sqLite;
-        sqLite.executeSql(`
-                  CREATE TABLE IF NOT EXISTS ${this.db_table} (
-                    id INTEGER PRIMARY KEY, 
-                    idcustomers varchar(255),
-                    name varchar(255),
-                    street varchar(255),
-                    outdoor_number integer(7),
-                    phone integer(10),
-                    pc integer(5),
-                    municipality varchar(255),
-                    state varchar(255),
-                    suburb varchar(255),
-                    idRuta integer(7),
-                    lat varchar(255),
-                    length varchar(255),                    
-                    itsNew varchar(255),
-                    status varchar(255),
-                    RFC varchar(255),
-                    email varchar(255),
-                    payment_method varchar(255),
-                    CFDI varchar(255),
-                    ruta integer(20)
-                  )`, [])
-          .then((res) => {
-            // console.log(JSON.stringify(res));
-          })
-          .catch((error) => console.log(JSON.stringify(error)));
-      })
-        .catch((error) => console.log(JSON.stringify(error)));
-    });
+      });
+      await this.createTable();
+    }
   }
 
-  // Crud
-  public addCustomer(customer: any) {  
-    this.dbInstance.executeSql(`
+  private async createTable(): Promise<void> {
+    const query = `
+      CREATE TABLE IF NOT EXISTS ${this.db_table} (
+        id INTEGER PRIMARY KEY, 
+        idcustomers varchar(255),
+        name varchar(255),
+        street varchar(255),
+        outdoor_number integer(7),
+        phone integer(10),
+        pc integer(5),
+        municipality varchar(255),
+        state varchar(255),
+        suburb varchar(255),
+        idRuta integer(7),
+        lat varchar(255),
+        length varchar(255),                    
+        itsNew varchar(255),
+        status varchar(255),
+        RFC varchar(255),
+        email varchar(255),
+        payment_method varchar(255),
+        CFDI varchar(255),
+        ruta integer(20)
+      )`;
+
+    try {
+      await this.dbInstance?.executeSql(query, []);
+    } catch (error) {
+      console.log('Error al crear la tabla: ' + JSON.stringify(error));
+    }
+  }
+
+  public addCustomer(customer: any) {
+    this.dbInstance?.executeSql(`
       INSERT INTO ${this.db_table} (idcustomers, name, street, outdoor_number, phone, pc, municipality, state, suburb, idRuta, lat, length, itsNew, status, RFC, email, payment_method, CFDI, ruta) 
       VALUES ('${customer.idcustomers}', '${customer.name.toUpperCase()}', '${customer.street}', ${customer.outdoor_number}, ${customer.phone}, ${customer.pc}, 
       '${customer.municipality}', '${customer.state}','${customer.suburb}', ${customer.idRuta}, '${customer.lat}', '${customer.length}', '${customer.itsNew}', '${customer.status}', 
       '${customer.RFC}', '${customer.email}', '${customer.payment_method}', '${customer.CFDI}', ${customer.ruta})`, [])
       .then(() => {
         this.getAllCustomers();
-      }, (e) => {
+      })
+      .catch((e) => {
+        console.log(JSON.stringify(e));
       });
   }
 
-  getAllCustomers() {
-    return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table}`, []).then((res) => {
-      this.CUSTOMERS = [];
-      if (res.rows.length > 0) {
-        for (var i = 0; i < res.rows.length; i++) {
+  async getAllCustomers(): Promise<any[]> {
+    await this.establishConnection();
+
+    if (this.dbInstance) {
+      try {
+        const res = await this.dbInstance.executeSql(`SELECT * FROM ${this.db_table}`, []);
+        this.CUSTOMERS = [];
+        for (let i = 0; i < res.rows.length; i++) {
           this.CUSTOMERS.push(res.rows.item(i));
         }
         return this.CUSTOMERS;
+      } catch (error) {
+        console.log("Error fetching customers: " + JSON.stringify(error));
+        throw error;
       }
-    }, (e) => {
-      console.log(JSON.stringify(e));
-    });
+    } else {
+      console.error('Error: dbInstance is undefined');
+      return [];
+    }
   }
 
-  // Get user
-  getCustomer(id): Promise<any> {
-    return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table} WHERE id = ?`, [id])
-      .then((res) => {
-        return {
-          id: res.rows.item(0).id,
-          idcustomers: res.rows.item(0).idcustomers,
-          name: res.rows.item(0).name,
-          street: res.rows.item(0).street,
-          outdoor_number: res.rows.item(0).outdoor_number,
-          phone: res.rows.item(0).phone,
-          pc: res.rows.item(0).pc,
-          municipality: res.rows.item(0).municipality,
-          suburb: res.rows.item(0).suburb,
-          idRuta: res.rows.item(0).idRuta,
-          state: res.rows.item(0).state,
-          lat: res.rows.item(0).lat,
-          length: res.rows.item(0).length,
-          itsNew: res.rows.item(0).itsNew,
-          status: res.rows.item(0).status,
-          RFC: res.rows.item(0).RFC,
-          email: res.rows.item(0).email,
-          payment_method: res.rows.item(0).payment_method,
-          CFDI: res.rows.item(0).CFDI,
-          ruta: res.rows.item(0).ruta
-        }
-      });
+  getCustomer(id: any): Promise<any> {
+    if (this.dbInstance) {
+      return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table} WHERE id = ?`, [id])
+        .then((res) => {
+          if (res.rows.length > 0) {
+            return {
+              id: res.rows.item(0).id,
+              idcustomers: res.rows.item(0).idcustomers,
+              // ... otras propiedades
+            };
+          } else {
+            throw new Error('Customer not found');
+          }
+        });
+    } else {
+      return Promise.reject(new Error('DB instance is undefined'));
+    }
+  }
+  
+
+  updateCustomer(id: any, customer: any) {
+    this.establishConnection();
+
+    if (this.dbInstance) {
+      let data = [customer.idcustomers, customer.name.toUpperCase(), customer.street, customer.outdoor_number, customer.phone, customer.pc, customer.municipality, customer.state, customer.suburb, customer.idRuta, customer.lat, customer.long, customer.itsNew, customer.status,
+        customer.RFC, customer.email, customer.payment_method, customer.CFDI, customer.ruta];
+      return this.dbInstance.executeSql(`UPDATE ${this.db_table} SET idcustomers = ?, name = ? , street = ?, outdoor_number = ?, phone = ?, pc = ?, municipality = ?, state = ?,suburb = ?, idRuta = ?, lat = ?, length = ?, itsNew = ? , status = ?,
+        RFC = ?, email = ?, payment_method = ?, CFDI = ?, ruta = ?  WHERE id = ${id}`, data);
+    } else {
+      console.error('Error: dbInstance is undefined');
+      return null;
+    }
   }
 
-  // Update
-  updateCustomer(id, customer) {
-    let data = [customer.idcustomers, customer.name.toUpperCase(), customer.street, customer.outdoor_number, customer.phone, customer.pc, customer.municipality, customer.state, customer.suburb, customer.idRuta, customer.lat, customer.long, customer.itsNew, customer.status, 
-      customer.RFC, customer.email, customer.payment_method, customer.CFDI, customer.ruta];
-    return this.dbInstance.executeSql(`UPDATE ${this.db_table} SET idcustomers = ?, name = ? , street = ?, outdoor_number = ?, phone = ?, pc = ?, municipality = ?, state = ?,suburb = ?, idRuta = ?, lat = ?, length = ?, itsNew = ? , status = ?,
-    RFC = ?, email = ?, payment_method = ?, CFDI = ?, ruta = ?  WHERE id = ${id}`, data)
+  updateStatus(id: any, status: any) {
+    this.establishConnection();
+
+    if (this.dbInstance) {
+      return this.dbInstance.executeSql(`UPDATE ${this.db_table} SET status = ? WHERE id = ?`, [status, id]);
+    } else {
+      console.error('Error: dbInstance is undefined');
+      return null;
+    }
   }
 
-  // Update
-  updateStatus(id, status) {
-    return this.dbInstance.executeSql(`UPDATE ${this.db_table} SET status = '${status}' WHERE id = ${id}`, []);
-  }
+  deleteCustomer(customer: any) {
+    this.establishConnection();
 
-  // Delete
-  deleteCustomer(customer) {
-    this.dbInstance.executeSql(`
-      DELETE FROM ${this.db_table} WHERE id = ${customer}`, [])
-      .then(() => {
-        // console.log("customer deleted!");
-        this.getAllCustomers();
-      })
-      .catch(e => {
-        console.log(JSON.stringify(e))
-      });
+    if (this.dbInstance) {
+      this.dbInstance.executeSql(`
+      DELETE FROM ${this.db_table} WHERE id = ?`, [customer])
+        .then(() => {
+          this.getAllCustomers();
+        })
+        .catch(e => {
+          console.log(JSON.stringify(e));
+        });
+    } else {
+      console.error('Error: dbInstance is undefined');
+    }
   }
 
   deleteTable() {
-    this.dbInstance.executeSql(`
-    DELETE FROM ${this.db_table}`)
-        .then(() => {
-        console.log("Table clean!");
-    })
-        .catch(e => {
-        console.log(JSON.stringify(e));
-    });
-  }
+    this.establishConnection();
 
+    if (this.dbInstance) {
+      this.dbInstance.executeSql(`
+      DELETE FROM ${this.db_table}`)
+        .then(() => {
+          console.log("Table clean!");
+        })
+        .catch(e => {
+          console.log(JSON.stringify(e));
+        });
+    } else {
+      console.error('Error: dbInstance is undefined');
+    }
+  }
 }

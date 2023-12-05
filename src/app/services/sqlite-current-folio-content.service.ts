@@ -7,7 +7,7 @@ import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 })
 export class SqliteCurrentFolioContentService {
 
-  private dbInstance: SQLiteObject;
+  private dbInstance!: SQLiteObject;
   readonly db_name: string = "sistema_de_rutas.db";
   readonly db_table: string = "current_folio_content";
   FOLIOS_CONTENT: Array<any> = [];
@@ -49,7 +49,7 @@ export class SqliteCurrentFolioContentService {
   }
 
   // Crud
-  public addFolioContent(CodProd, Descripcion, NoRenglon, NumDocto, Piezas, Unidades, Medida, PrecioUnitario) {
+  public addFolioContent(CodProd: any, Descripcion: any, NoRenglon: any, NumDocto: any, Piezas: any, Unidades: any, Medida: any, PrecioUnitario: any) {
     this.dbInstance.executeSql(`
       INSERT INTO ${this.db_table} (CodProd, Descripcion, NoRenglon, NumDocto, Piezas, Unidades, Medida, PrecioUnitario) 
       VALUES ('${CodProd}','${Descripcion}', ${NoRenglon}, ${NumDocto}, ${Piezas}, ${Unidades}, '${Medida}', ${PrecioUnitario})`, [])
@@ -89,7 +89,7 @@ export class SqliteCurrentFolioContentService {
   }
 
   // Get user
-  getFolioContent(id): Promise<any> {
+  getFolioContent(id: any): Promise<any> {
     return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table} WHERE id = ?`, [id])
       .then((res) => {
         return {
@@ -116,7 +116,7 @@ export class SqliteCurrentFolioContentService {
 
 
   // Delete
-  deleteFolioContent(folio) {
+  deleteFolioContent(folio: any) {
     this.dbInstance.executeSql(`
       DELETE FROM ${this.db_table} WHERE id = ${folio}`, [])
       .then(() => {

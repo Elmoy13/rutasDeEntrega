@@ -7,7 +7,7 @@ import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 })
 export class SqliteFolioService {
 
-  private dbInstance: SQLiteObject;
+  private dbInstance!: SQLiteObject;
   readonly db_name: string = "sistema_de_rutas.db";
   readonly db_table: string = "folio";
   FOLIOS: Array<any> = [];
@@ -60,20 +60,20 @@ export class SqliteFolioService {
   getAllFolios() {
     return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table}`, []).then((res) => {
       this.FOLIOS = [];
-      if (res.rows.length > 0) {
-        for (var i = 0; i < res.rows.length; i++) {
-          this.FOLIOS.push(res.rows.item(i));
-        }
-        return this.FOLIOS;
+      for (let i = 0; i < res.rows.length; i++) {
+        this.FOLIOS.push(res.rows.item(i));
       }
-    }, (e) => {
-      console.log(JSON.stringify(e));
+      return this.FOLIOS;
+    }).catch((error) => {
+      console.log("Error fetching folios: " + JSON.stringify(error));
+      throw error; // Propagate the error to the calling code
     });
   }
+  
 
 
   // Delete
-  deleteFolio(folio) {
+  deleteFolio(folio: any) {
     this.dbInstance.executeSql(`
       DELETE FROM ${this.db_table} WHERE NumDocto = ${folio}`, [])
       .then(() => {

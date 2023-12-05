@@ -19,24 +19,24 @@ export class SalesService {
   //   return this.http.post(this.URL_API + 'sales/create', sale);
   // }
 
-  createAllSalesToBonnacarne(sale) {
+  createAllSalesToBonnacarne(sale: any) {
     return this.http.post(env.RUTAS_API + 'docVenta/create', sale);
   }
 
-  createAllSalesContentToBonnacarne(sale_content) {
+  createAllSalesContentToBonnacarne(sale_content: any) {
     return this.http.post(env.RUTAS_API + 'movVenta/create', sale_content);
   }
 
-  createAllSales(sale) {
+  createAllSales(sale: any) {
     return this.http.post(this.URL_API + 'sales/create', sale);
   }
 
-  createAllSalesContent(sale_content) {
+  createAllSalesContent(sale_content: any) {
     return this.http.post(this.URL_API + 'sales_content/create', sale_content);
   }
 
 
-  add(product) {
+  add(product: { CodProd: any; qty: number; }) {
 
     if (this.PRODUCTS.length != 1) {
       let index = this.PRODUCTS.findIndex(p => p.CodProd === product.CodProd);
@@ -54,7 +54,7 @@ export class SalesService {
     }
   }
 
-  addMoreThanOne(product, qty) {
+  addMoreThanOne(product: { CodProd: any; qty: any; }, qty: any) {
     if (this.PRODUCTS.length != 1) {
       let index = this.PRODUCTS.findIndex(p => p.CodProd === product.CodProd);
       if (index == -1) {
@@ -78,15 +78,15 @@ export class SalesService {
     this.PRODUCTS = [];
   }
 
-  increase(index) {
+  increase(index: number) {
     this.PRODUCTS[index].qty = parseInt(this.PRODUCTS[index].qty) + 1;
   }
 
-  increaseMoreThanOne(index, qty) {
+  increaseMoreThanOne(index: number, qty: any) {
     this.PRODUCTS[index].qty = qty;
   }
 
-  decrease(index) {
+  decrease(index: number) {
     if (this.PRODUCTS[index].qty > 0) {
       this.PRODUCTS[index].qty = parseInt(this.PRODUCTS[index].qty) - 1;
     }

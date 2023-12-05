@@ -8,7 +8,7 @@ import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 export class SqliteWeekdaysService {
 
 
-  private dbInstance: SQLiteObject;
+  private dbInstance!: SQLiteObject;
   readonly db_name: string = "sistema_de_rutas.db";
   readonly db_table: string = "weekdays";
   WEEKDAYS: Array<any> = [];
@@ -47,7 +47,7 @@ export class SqliteWeekdaysService {
   }
 
   // Crud
-  public addItem(id, route, day, name, city, desc) {
+  public addItem(id: any, route: any, day: any, name: any, city: any, desc: any) {
     // validation
     // if (!n.length || !e.length) { 
     //   console.log('Provide both email & name');
@@ -66,19 +66,19 @@ export class SqliteWeekdaysService {
   getAllWeekdays() {
     return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table}`, []).then((res) => {
       this.WEEKDAYS = [];
-      if (res.rows.length > 0) {
-        for (var i = 0; i < res.rows.length; i++) {
-          this.WEEKDAYS.push(res.rows.item(i));
-        }
-        return this.WEEKDAYS;
+      for (let i = 0; i < res.rows.length; i++) {
+        this.WEEKDAYS.push(res.rows.item(i));
       }
-    }, (e) => {
-      console.log(JSON.stringify(e));
+      return this.WEEKDAYS;
+    }).catch((error) => {
+      console.log("Error fetching weekdays: " + JSON.stringify(error));
+      throw error; // Propagate the error to the calling code
     });
   }
+  
 
   // Delete
-  deleteWeekday(id) {
+  deleteWeekday(id: any) {
     this.dbInstance.executeSql(`
       DELETE FROM ${this.db_table} WHERE idweekdays = ${id}`, [])
       .then(() => {

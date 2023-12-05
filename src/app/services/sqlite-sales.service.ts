@@ -7,7 +7,7 @@ import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 })
 export class SqliteSalesService {
 
-  private dbInstance: SQLiteObject;
+  private dbInstance!: SQLiteObject;
   readonly db_name: string = "sistema_de_rutas.db";
   readonly db_table: string = "sales";
   SALES: Array<any> = [];
@@ -78,7 +78,7 @@ export class SqliteSalesService {
   }
 
   // Get user
-  getVisit(id): Promise<any> {
+  getVisit(id: any): Promise<any> {
     return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table} WHERE idSell = ?`, [id])
       .then((res) => {
         return {
@@ -98,7 +98,7 @@ export class SqliteSalesService {
   }
 
   // Delete
-  deleteSale(sales) {
+  deleteSale(sales: any) {
     this.dbInstance.executeSql(`
       DELETE FROM ${this.db_table} WHERE id = ${sales}`, [])
       .then(() => {

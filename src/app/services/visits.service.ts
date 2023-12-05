@@ -11,7 +11,7 @@ export class VisitsService {
 
   constructor( private http: HttpClient) { }
 
-  createVisits(visit) {    
+  createVisits(visit: any) {    
     return this.http.post(this.URL_API + 'visits/create', visit);
   }
 

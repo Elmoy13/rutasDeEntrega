@@ -7,7 +7,7 @@ import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 })
 export class SqliteVisitsService {
 
-  private dbInstance: SQLiteObject;
+  private dbInstance!: SQLiteObject;
   readonly db_name: string = "sistema_de_rutas.db";
   readonly db_table: string = "visits";
   VISITS: Array<any> = [];
@@ -64,19 +64,19 @@ export class SqliteVisitsService {
   getAllVisits() {
     return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table}`, []).then((res) => {
       this.VISITS = [];
-      if (res.rows.length > 0) {
-        for (var i = 0; i < res.rows.length; i++) {
-          this.VISITS.push(res.rows.item(i));
-        }
-        return this.VISITS;
+      for (let i = 0; i < res.rows.length; i++) {
+        this.VISITS.push(res.rows.item(i));
       }
-    }, (e) => {
-      console.log(JSON.stringify(e));
+      return this.VISITS;
+    }).catch((error) => {
+      console.log("Error fetching visits: " + JSON.stringify(error));
+      throw error; // Propagate the error to the calling code
     });
   }
+  
 
   // Get user
-  getVisit(id): Promise<any> {
+  getVisit(id: any): Promise<any> {
     return this.dbInstance.executeSql(`SELECT * FROM ${this.db_table} WHERE id = ?`, [id])
       .then((res) => {
         return {
@@ -94,22 +94,22 @@ export class SqliteVisitsService {
   }
 
   // Update
-  updateVisit(id, visit) {
+  updateVisit(id: any, visit: { idCustomer: any; lat: any; long: any; check_in: any; check_out: any; idVendedor: any; idRuta: any; saleCreated: any; }) {
     let data = [visit.idCustomer, visit.lat, visit.long, visit.check_in, visit.check_out, visit.idVendedor, visit.idRuta, visit.saleCreated];
     return this.dbInstance.executeSql(`UPDATE ${this.db_table} SET idCustomer = ?, lat = ?, long = ?, check_in = ?, check_out = ?, idVendedor = ?, idRuta = ?, saleCreated = ? WHERE id = ${id}`, data)
   }
 
   // Update
-  updateVisitCheckOut(id, check_out) {
+  updateVisitCheckOut(id: any, check_out: any) {
     return this.dbInstance.executeSql(`UPDATE ${this.db_table} SET check_out = '${check_out}' WHERE id = ${id}`, [])
   }
 
-  updateSaleCreated(id, saleCreated) {
+  updateSaleCreated(id: any, saleCreated: any) {
     return this.dbInstance.executeSql(`UPDATE ${this.db_table} SET saleCreated = '${saleCreated}' WHERE id = ${id}`, [])
   }
 
   // Delete
-  deleteVisit(visit) {
+  deleteVisit(visit: any) {
     this.dbInstance.executeSql(`
       DELETE FROM ${this.db_table} WHERE id = ${visit}`, [])
       .then(() => {
